@@ -7,6 +7,7 @@
     <RootNamespace>user_provider_api</RootNamespace>
     <Watch>true</Watch>
     <WatchIncludes>**/*.cs;**/*.cshtml</WatchIncludes>
+    <WatchExcludes>**/obj/**;**/bin/**;**/.git/**</WatchExcludes>
   </PropertyGroup>
 
   <ItemGroup>

@@ -30,6 +30,13 @@ public class UserController : ControllerBase
         public required string Password { get; set; }
     }
 
+    public class UpdateRequest
+    {
+        public string? Username { get; set; }
+        public string? Email { get; set; }
+        public string? Password { get; set; }
+    }
+
     [HttpPost("register")]
     public async Task<ActionResult<ApiResponse<UserDto?>>> Register([FromBody] RegisterRequest request)
     {
@@ -84,6 +91,54 @@ public class UserController : ControllerBase
         {
             Status = "success",
             Message = "Logout successful",
+            Datas = default
+        });
+    }
+
+    [Authorize]
+    [HttpPut("{id}")]
+    public async Task<ActionResult<ApiResponse<UserDto?>>> Update(int id, [FromBody] UpdateRequest request)
+    {
+        var (user, error) = await _userService.UpdateAsync(id, request.Username, request.Email, request.Password);
+
+        if (error != null)
+        {
+            return BadRequest(new ApiResponse<UserDto?>
+            {
+                Status = "error",
+                Message = error,
+                Datas = default
+            });
+        }
+
+        return Ok(new ApiResponse<UserDto?>
+        {
+            Status = "success",
+            Message = "User updated successfully",
+            Datas = user
+        });
+    }
+
+    [Authorize]
+    [HttpDelete("{id}")]
+    public async Task<ActionResult<ApiResponse<object?>>> Delete(int id)
+    {
+        var error = await _userService.DeleteAsync(id);
+
+        if (error != null)
+        {
+            return BadRequest(new ApiResponse<object?>
+            {
+                Status = "error",
+                Message = error,
+                Datas = default
+            });
+        }
+
+        return Ok(new ApiResponse<object?>
+        {
+            Status = "success",
+            Message = "User deleted successfully",
             Datas = default
         });
     }

@@ -69,4 +69,54 @@ public class UserService
 
         return (userDto, null);
     }
+
+    public async Task<(UserDto? user, string? error)> UpdateAsync(int userId, string? username, string? email, string? password)
+    {
+        var user = await _context.Users.FindAsync(userId);
+        if (user == null)
+            throw new ApiException("User not found", 404);
+
+        if (username != null)
+        {
+            if (await _context.Users.AnyAsync(u => u.Username == username && u.Id != userId))
+                throw new ApiException("Username already exists", 400);
+            user.Username = username;
+        }
+
+        if (email != null)
+        {
+            if (await _context.Users.AnyAsync(u => u.Email == email && u.Id != userId))
+                throw new ApiException("Email already exists", 400);
+            user.Email = email;
+        }
+
+        if (password != null)
+        {
+            user.Password = PasswordHelper.HashPassword(password);
+        }
+
+        await _context.SaveChangesAsync();
+
+        var userDto = new UserDto
+        {
+            Id = user.Id,
+            Username = user.Username,
+            Email = user.Email,
+            CreatedAt = user.CreatedAt
+        };
+
+        return (userDto, null);
+    }
+
+    public async Task<string?> DeleteAsync(int userId)
+    {
+        var user = await _context.Users.FindAsync(userId);
+        if (user == null)
+            throw new ApiException("User not found", 404);
+
+        _context.Users.Remove(user);
+        await _context.SaveChangesAsync();
+
+        return null;
+    }
 }
