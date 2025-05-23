@@ -142,4 +142,28 @@ public class UserController : ControllerBase
             Datas = default
         });
     }
+
+    [Authorize]
+    [HttpGet("{id}/activities")]
+    public async Task<ActionResult<ApiResponse<List<UserActivityDto>?>>> GetUserActivities(int id)
+    {
+        var (activities, error) = await _userService.GetUserActivitiesAsync(id);
+
+        if (error != null)
+        {
+            return BadRequest(new ApiResponse<List<UserActivityDto>?>
+            {
+                Status = "error",
+                Message = error,
+                Datas = default
+            });
+        }
+
+        return Ok(new ApiResponse<List<UserActivityDto>?>
+        {
+            Status = "success",
+            Message = "User activities retrieved successfully",
+            Datas = activities
+        });
+    }
 }
