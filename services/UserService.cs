@@ -10,11 +10,13 @@ public class UserService
 {
     private readonly AppDbContext _context;
     private readonly JwtTokenService _jwtTokenService;
+    private readonly UserActivityService _activityService;
 
-    public UserService(AppDbContext context, JwtTokenService jwtTokenService)
+    public UserService(AppDbContext context, JwtTokenService jwtTokenService, UserActivityService activityService)
     {
         _context = context;
         _jwtTokenService = jwtTokenService;
+        _activityService = activityService;
     }
 
     public async Task<(UserDto? user, string? error)> RegisterAsync(string username, string email, string password)
@@ -34,6 +36,7 @@ public class UserService
 
         _context.Users.Add(user);
         await _context.SaveChangesAsync();
+        await _activityService.LogActivityAsync(user.Id, "register");
 
         var userDto = new UserDto
         {
@@ -67,6 +70,8 @@ public class UserService
             Token = token
         };
 
+        await _activityService.LogActivityAsync(user.Id, "login");
+
         return (userDto, null);
     }
 
@@ -76,23 +81,26 @@ public class UserService
         if (user == null)
             throw new ApiException("User not found", 404);
 
-        if (username != null)
+        if (username != null && username != user.Username)
         {
             if (await _context.Users.AnyAsync(u => u.Username == username && u.Id != userId))
                 throw new ApiException("Username already exists", 400);
+            await _activityService.LogActivityAsync(userId, "update_username", user.Username, username);
             user.Username = username;
         }
 
-        if (email != null)
+        if (email != null && email != user.Email)
         {
             if (await _context.Users.AnyAsync(u => u.Email == email && u.Id != userId))
                 throw new ApiException("Email already exists", 400);
+            await _activityService.LogActivityAsync(userId, "update_email", user.Email, email);
             user.Email = email;
         }
 
         if (password != null)
         {
             user.Password = PasswordHelper.HashPassword(password);
+            await _activityService.LogActivityAsync(userId, "update_password");
         }
 
         await _context.SaveChangesAsync();
@@ -114,6 +122,7 @@ public class UserService
         if (user == null)
             throw new ApiException("User not found", 404);
 
+        await _activityService.LogActivityAsync(userId, "delete");
         _context.Users.Remove(user);
         await _context.SaveChangesAsync();
 
