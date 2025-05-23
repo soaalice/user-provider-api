@@ -66,6 +66,8 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 // Register services
 builder.Services.AddScoped<JwtTokenService>();
 builder.Services.AddScoped<UserService>();
+builder.Services.AddScoped<UserActivityService>();
+builder.Services.AddHttpContextAccessor();
 
 var app = builder.Build();
 
