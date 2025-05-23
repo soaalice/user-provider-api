@@ -128,4 +128,28 @@ public class UserService
 
         return null;
     }
+
+    public async Task<(List<UserActivityDto>? activities, string? error)> GetUserActivitiesAsync(int userId)
+    {
+        var user = await _context.Users.FindAsync(userId);
+        if (user == null)
+            throw new ApiException("User not found", 404);
+
+        var activities = await _context.UserActivities
+            .Where(ua => ua.UserId == userId)
+            .OrderByDescending(ua => ua.CreatedAt)
+            .Select(ua => new UserActivityDto
+            {
+                Id = ua.Id,
+                ActivityType = ua.ActivityType,
+                CreatedAt = ua.CreatedAt,
+                OldValue = ua.OldValue,
+                NewValue = ua.NewValue,
+                IpAddress = ua.IpAddress,
+                DeviceInfo = ua.DeviceInfo
+            })
+            .ToListAsync();
+
+        return (activities, null);
+    }
 }
