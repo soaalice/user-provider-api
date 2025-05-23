@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using UserProviderApi.Models;
+using UserProviderApi.Models.Dto;
 using UserProviderApi.Services;
 
 namespace UserProviderApi.Controllers;
@@ -30,13 +31,13 @@ public class UserController : ControllerBase
     }
 
     [HttpPost("register")]
-    public async Task<ActionResult<ApiResponse<User?>>> Register([FromBody] RegisterRequest request)
+    public async Task<ActionResult<ApiResponse<UserDto?>>> Register([FromBody] RegisterRequest request)
     {
         var (user, error) = await _userService.RegisterAsync(request.Username, request.Email, request.Password);
 
         if (error != null)
         {
-            return BadRequest(new ApiResponse<User?>
+            return BadRequest(new ApiResponse<UserDto?>
             {
                 Status = "error",
                 Message = error,
@@ -44,7 +45,7 @@ public class UserController : ControllerBase
             });
         }
 
-        return Ok(new ApiResponse<User?>
+        return Ok(new ApiResponse<UserDto?>
         {
             Status = "success",
             Message = "Registration successful",
@@ -53,13 +54,13 @@ public class UserController : ControllerBase
     }
 
     [HttpPost("login")]
-    public async Task<ActionResult<ApiResponse<object?>>> Login([FromBody] LoginRequest request)
+    public async Task<ActionResult<ApiResponse<UserDto?>>> Login([FromBody] LoginRequest request)
     {
-        var (user, token, error) = await _userService.LoginAsync(request.Username, request.Password);
+        var (user, error) = await _userService.LoginAsync(request.Username, request.Password);
 
         if (error != null)
         {
-            return BadRequest(new ApiResponse<object?>
+            return BadRequest(new ApiResponse<UserDto?>
             {
                 Status = "error",
                 Message = error,
@@ -67,11 +68,11 @@ public class UserController : ControllerBase
             });
         }
 
-        return Ok(new ApiResponse<object?>
+        return Ok(new ApiResponse<UserDto?>
         {
             Status = "success",
             Message = "Login successful",
-            Datas = new { user, token }
+            Datas = user
         });
     }
 
